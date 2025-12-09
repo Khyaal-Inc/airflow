@@ -1000,8 +1000,33 @@ class KubernetesPodOperator(BaseOperator):
                 body={"metadata": {"labels": {self.POD_CHECKED_KEY: "True"}}},
             )
 
+    # def on_kill(self) -> None:
+    #     self._killed = True
+    #     if self.pod:
+    #         pod = self.pod
+    #         kwargs = {
+    #             "name": pod.metadata.name,
+    #             "namespace": pod.metadata.namespace,
+    #         }
+    #         if self.termination_grace_period is not None:
+    #             kwargs.update(grace_period_seconds=self.termination_grace_period)
+
+    #         try:
+    #             self.client.delete_namespaced_pod(**kwargs)
+    #         except kubernetes.client.exceptions.ApiException:
+    #             self.log.exception("Unable to delete pod %s", self.pod.metadata.name)
+
     def on_kill(self) -> None:
         self._killed = True
+
+        # ⛔ Skip pod deletion when reattaching is desired
+        if getattr(self, "reattach_on_restart", False):
+            self.log.warning(
+                "Worker terminated but reattach_on_restart=True — skipping pod deletion."
+            )
+            return
+
+        # Default behavior (delete pod)
         if self.pod:
             pod = self.pod
             kwargs = {
@@ -1015,6 +1040,7 @@ class KubernetesPodOperator(BaseOperator):
                 self.client.delete_namespaced_pod(**kwargs)
             except kubernetes.client.exceptions.ApiException:
                 self.log.exception("Unable to delete pod %s", self.pod.metadata.name)
+
 
     def build_pod_request_obj(self, context: Context | None = None) -> k8s.V1Pod:
         """

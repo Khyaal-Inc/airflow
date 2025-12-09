@@ -1135,26 +1135,51 @@ def _get_template_context(
     return Context(context)  # type: ignore
 
 
-def _is_eligible_to_retry(*, task_instance: TaskInstance | TaskInstancePydantic):
-    """
-    Is task instance is eligible for retry.
+# def _is_eligible_to_retry(*, task_instance: TaskInstance | TaskInstancePydantic):
+#     """
+#     Is task instance is eligible for retry.
 
-    :param task_instance: the task instance
+#     :param task_instance: the task instance
 
-    :meta private:
-    """
+#     :meta private:
+#     """
+#     if task_instance.state == TaskInstanceState.RESTARTING:
+#         # If a task is cleared when running, it goes into RESTARTING state and is always
+#         # eligible for retry
+#         return True
+#     if not getattr(task_instance, "task", None):
+#         # Couldn't load the task, don't know number of retries, guess:
+#         return task_instance.try_number <= task_instance.max_tries
+
+#     if TYPE_CHECKING:
+#         assert task_instance.task
+
+#     return task_instance.task.retries and task_instance.try_number <= task_instance.max_tries
+
+
+from airflow.models.xcom import XCom
+def _is_eligible_to_retry(*, task_instance):
     if task_instance.state == TaskInstanceState.RESTARTING:
-        # If a task is cleared when running, it goes into RESTARTING state and is always
-        # eligible for retry
         return True
+
     if not getattr(task_instance, "task", None):
-        # Couldn't load the task, don't know number of retries, guess:
         return task_instance.try_number <= task_instance.max_tries
 
-    if TYPE_CHECKING:
-        assert task_instance.task
+    # --- NEW LOGIC STARTS HERE ---
+    # If worker died, allow retry even if normal retry rules would block it
+    worker_died = XCom.get_value(
+        key="worker_died",
+        task_id=task_instance.task_id,
+        dag_id=task_instance.dag_id,
+        execution_date=task_instance.execution_date,
+    )
+
+    if worker_died:
+        return True
+    # --- NEW LOGIC ENDS HERE ---
 
     return task_instance.task.retries and task_instance.try_number <= task_instance.max_tries
+
 
 
 @provide_session
@@ -2908,7 +2933,21 @@ class TaskInstance(Base, LoggingMixin):
                 os._exit(1)
                 return
             self.log.error("Received SIGTERM. Terminating subprocesses.")
-            self.task.on_kill()
+            # self.task.on_kill()
+            # Do not kill pod for KubernetesPodOperator when reattach is enabled
+            from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+
+            if isinstance(self.task, KubernetesPodOperator) and getattr(self.task, "reattach_on_restart", False):
+                # push xcom so we know worker died
+                XCom.set(
+                    key="worker_died",
+                    value=True,
+                    task_id=self.task_id,
+                    dag_id=self.dag_id,
+                    execution_date=self.execution_date,
+                )
+            else:
+                self.task.on_kill()
             raise AirflowTaskTerminated("Task received SIGTERM signal")
 
         signal.signal(signal.SIGTERM, signal_handler)
