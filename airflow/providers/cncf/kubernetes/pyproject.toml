@@ -67,7 +67,8 @@ Documentation = "https://airflow.apache.org/docs/apache-airflow-providers-cncf-k
 provider_info = "airflow.providers.cncf.kubernetes:get_provider_info"
 
 [tool.hatch.build.targets.wheel]
-packages = ["."]
+only-include = ["airflow"]
+sources = ["../../../.."]
 
 [tool.hatch.build.targets.sdist]
 include = [
