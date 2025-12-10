@@ -66,18 +66,18 @@ Documentation = "https://airflow.apache.org/docs/apache-airflow-providers-cncf-k
 provider_info = "airflow.providers.cncf.kubernetes:get_provider_info"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["airflow"]
-sources = ["../../../.."]
+packages = ["../../../../airflow/providers/cncf/kubernetes"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "**/*.py",
-    "**/*.yaml",
-    "**/*.jinja2",
-    "**/*.rst",
+    "../../../../airflow/providers/cncf/kubernetes/**/*.py",
+    "../../../../airflow/providers/cncf/kubernetes/**/*.yaml",
+    "../../../../airflow/providers/cncf/kubernetes/**/*.jinja2",
+    "../../../../airflow/providers/cncf/kubernetes/**/*.rst",
 ]
 exclude = [
     "**/__pycache__",
     "**/*.pyc",
     "**/*.pyo",
+    "**/venv*",
 ]
