@@ -65,19 +65,26 @@ Documentation = "https://airflow.apache.org/docs/apache-airflow-providers-cncf-k
 [project.entry-points."apache_airflow_provider"]
 provider_info = "airflow.providers.cncf.kubernetes:get_provider_info"
 
+[tool.hatch.build]
+# Set the directory where hatchling should look for packages
+# This tells hatchling the root is 4 levels up from pyproject.toml
+directory = "../../../.."
+
 [tool.hatch.build.targets.wheel]
-packages = ["../../../../airflow/providers/cncf/kubernetes"]
+# Include only the airflow.providers.cncf.kubernetes package
+packages = ["airflow/providers/cncf/kubernetes"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "../../../../airflow/providers/cncf/kubernetes/**/*.py",
-    "../../../../airflow/providers/cncf/kubernetes/**/*.yaml",
-    "../../../../airflow/providers/cncf/kubernetes/**/*.jinja2",
-    "../../../../airflow/providers/cncf/kubernetes/**/*.rst",
+    "airflow/providers/cncf/kubernetes/**/*.py",
+    "airflow/providers/cncf/kubernetes/**/*.yaml",
+    "airflow/providers/cncf/kubernetes/**/*.jinja2",
+    "airflow/providers/cncf/kubernetes/**/*.rst",
 ]
 exclude = [
     "**/__pycache__",
     "**/*.pyc",
     "**/*.pyo",
     "**/venv*",
+    "**/.git*",
 ]
