@@ -29,7 +29,7 @@ from airflow import __version__ as airflow_version
 
 __all__ = ["__version__"]
 
-__version__ = "8.3.1"
+__version__ = "8.3.1.post1+khyaal"
 
 if packaging.version.parse(packaging.version.parse(airflow_version).base_version) < packaging.version.parse(
     "2.7.0"
@@ -37,3 +37,13 @@ if packaging.version.parse(packaging.version.parse(airflow_version).base_version
     raise RuntimeError(
         f"The package `apache-airflow-providers-cncf-kubernetes:{__version__}` needs Apache Airflow 2.7.0+"
     )
+
+
+def get_provider_info():
+    """Return provider information for discovery."""
+    import yaml
+    from pathlib import Path
+
+    provider_yaml_path = Path(__file__).parent / "provider.yaml"
+    with provider_yaml_path.open() as f:
+        return yaml.safe_load(f)

@@ -1,0 +1,9 @@
+include provider.yaml
+include *.rst
+include *.jinja2
+recursive-include kubernetes_executor_templates *.yaml
+recursive-include pod_template_file_examples *.yaml
+recursive-include . *.py
+recursive-exclude . __pycache__
+recursive-exclude . *.pyc
+recursive-exclude . *.pyo
