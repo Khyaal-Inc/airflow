@@ -16,36 +16,30 @@
 # under the License.
 
 from setuptools import setup
-import os
-from pathlib import Path
 
-# Get the absolute path to the repo root (4 levels up from this setup.py)
-repo_root = Path(__file__).parent.parent.parent.parent.parent.resolve()
-
-# Manually discover all packages under airflow.providers.cncf.kubernetes
-def find_packages():
-    """Find all namespace packages manually."""
-    packages = []
-    base_path = repo_root / "airflow" / "providers" / "cncf" / "kubernetes"
-
-    for root, dirs, files in os.walk(base_path):
-        # Skip venv and hidden directories
-        dirs[:] = [d for d in dirs if not d.startswith('.') and not d.startswith('venv')]
-
-        if '__init__.py' in files:
-            # Convert path to package name
-            rel_path = Path(root).relative_to(repo_root)
-            package = str(rel_path).replace(os.sep, '.')
-            packages.append(package)
-
-    return packages
+# Explicitly list all packages to avoid discovery issues
+PACKAGES = [
+    "airflow.providers.cncf.kubernetes",
+    "airflow.providers.cncf.kubernetes.backcompat",
+    "airflow.providers.cncf.kubernetes.cli",
+    "airflow.providers.cncf.kubernetes.decorators",
+    "airflow.providers.cncf.kubernetes.executors",
+    "airflow.providers.cncf.kubernetes.hooks",
+    "airflow.providers.cncf.kubernetes.kubernetes_executor_templates",
+    "airflow.providers.cncf.kubernetes.operators",
+    "airflow.providers.cncf.kubernetes.pod_template_file_examples",
+    "airflow.providers.cncf.kubernetes.resource_convert",
+    "airflow.providers.cncf.kubernetes.sensors",
+    "airflow.providers.cncf.kubernetes.triggers",
+    "airflow.providers.cncf.kubernetes.utils",
+]
 
 setup(
     name="apache-airflow-providers-cncf-kubernetes",
     version="8.3.1.post1+khyaal",
     description="Apache Airflow Providers for CNCF Kubernetes (Khyaal custom build)",
-    packages=find_packages(),
-    package_dir={"": str(repo_root)},
+    packages=PACKAGES,
+    package_dir={"": "../../../.."},
     include_package_data=True,
     install_requires=[
         "aiofiles>=23.2.0",
